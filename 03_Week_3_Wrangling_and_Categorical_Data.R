@@ -1,7 +1,7 @@
 ##Week Three : Wrangling Datasets and Categorical Data
 
 ## https://www.youtube.com/watch?v=uLcd6tRTUEY 
-## "Working with categorical data in R without losing your mind" 
+## "Working with Categorical Data in R without Losing your Mind" 
 
 ## Load what you need
 library(tidyverse)
@@ -32,22 +32,32 @@ table(warm_up)
 
 boxplot(warm_up)
 
+datasets::iris
+
 setosa <- filter(iris, Species == "setosa")
 dim(setosa)
 
 ggplot(setosa)  + 
   geom_point(aes(x = Sepal.Length, y = Sepal.Width))
 
+
 ##Do some initial exploration of 'gapminder' if you are unfamiliar
 
 names(gapminder)
 dim(gapminder)
+
+head(gapminder)
+glimpse(gapminder)
+
 str(gapminder)
 summary(gapminder)
 view(gapminder)
 mean(gapminder$lifeExp)
+
 plot(gapminder$lifeExp, gapminder$gdpPercap, main="Scatterplot Example", 
-  xlab= "Life Expectancy", ylab= "GDP per Capita", pch=19, col="orchid")
+  xlab= "Life Expectancy", ylab= "GDP per Capita", pch=6, col="orchid")
+
+?plot()
 
 ## add fit lines to your plot
 abline(lm(gapminder$lifeExp~gapminder$gdpPercap), col="red") # regression line (y~x)
@@ -70,7 +80,7 @@ gapminder %>%
 ##If you want a big chunk of variables use the start_col:end_col syntax
 
 gapminder %>%
-  select(country:continent, lifeExp) %>%
+  select(country:pop) %>%
   glimpse()
 
 ##An alternative is to deselect by using a minus in front of the columns name
@@ -152,7 +162,7 @@ gapminder %>%
 ### Renaming columns is possible with select(x) or rename(x)
 
 gapminder %>%
-  select(lifeExp = lifeExp, population = pop) %>%
+  select(life_expectancy = lifeExp, population = pop) %>%
   glimpse()
 
 gapminder %>%
@@ -163,7 +173,8 @@ gapminder %>%
 # or other argument
 
 gapminder %>%
-  select(lifeExp, everything()) %>%
+  select_all(toupper) %>%
+  glimpse()
 
 ### Sometimes row names should be columns so DPLYR has rownames_to_column(x) for this purpose.
 
@@ -202,6 +213,7 @@ arrange (desc(lifeExp_category))
 ### Fun ggplot break ###
 
 # Data Prep
+
 data("mtcars")  # load data
 mtcars$`car name` <- rownames(mtcars)  # create new column for car names
 mtcars$mpg_z <- round((mtcars$mpg - mean(mtcars$mpg))/sd(mtcars$mpg), 2)  # compute normalized mpg
@@ -228,12 +240,13 @@ ggplot(mtcars, aes(x=`car name`, y=mpg_z, label=mpg_z)) +
 
 ### STRNGR preview: mutate string columns with str_extract(x)
 
-gapminder %>%
+tango <- gapminder %>%
   select(country) %>%
   mutate(continent_first_ltr = tolower(str_extract(country, pattern = "\\D"))) %>%
   group_by(continent_first_ltr) %>%
   tally() %>%
   arrange (desc(n))
+
 
 ## but what if you want to mutate several columns... use mutate_all(x), mutate_if(x)
 # and mutate_at()
@@ -268,7 +281,7 @@ msleep %>%
 
 ## Working with discrete columns: Recoding certain columns requires this syntax...
 
-msleep %>%
+mx <- msleep %>%
   mutate(conservation2 = recode(conservation,
                                 "en" = "Endangered",
                                 "lc" = "Least_Concern",
@@ -276,8 +289,10 @@ msleep %>%
                                 .default = "other")) %>%
   count(conservation2)
 
+str(mx)
+
 ## A special version exists to return a factor.  conservation2 was a factor
-# in the previous example because conservation was a factor.
+# in the previous example 
 ## In order to return a factor set the .ordered argument to TRUE
 
 
@@ -297,6 +312,8 @@ msleep %>%
 msleep %>%
   select(name, sleep_total) %>%
   mutate(sleep_time = ifelse(sleep_total > 10, "long", "short")) 
+
+
 
 ## Creating multiple discrete columns is also easy.  Use case_when(x)
 
@@ -336,7 +353,8 @@ gapminder %>%
 
 gapminder %>%
   select (country, lifeExp) %>%
-  filter(between(lifeExp, 80, 82))
+  filter(lifeExp > 80 | lifeExp < 40 ) 
+  
 
 ## also handy is the near(x) function
 
@@ -375,7 +393,7 @@ gapminder %>%
 
 gapminder %>%
   select (country, lifeExp) %>%
-  filter(str_detect(tolower(country), pattern = "ico"))
+  filter(str_detect(tolower(country), pattern = "stan"))
 
 ## Multiple condtions require an AND / OR / NOT
 
@@ -454,7 +472,7 @@ poke %>%
 gapminder %>%
   select(continent:country) %>%
   add_count(country) %>%
-  filter(continent == 'Europe')
+  filter(continent == 'Africa')
 
 ## SUMMARIZE and GROUP_BY almost always go together and are two of the most
 # useful functions for handling rows
@@ -830,22 +848,23 @@ chisq.test(unfair_rolls, p=c(1/6,1/6,1/6,1/6,1/6,1/6))
 
 #BUILD SKILLS in FOUR key TIDYVERSE areas
 
-##RELATIONAL data will give you tools for working with multiple interrelated datasets.
+##1) RELATIONAL data ....working with multiple interrelated datasets.
 
 # If you have already worked with SQL these functions will seem very familiar
 # left_join(x)
 
-##STRINGS will introduce regular expressions, a powerful tool for manipulating strings.
+##2) STRINGS data : STRINGR will introduce regular expressions, a powerful tool for manipulating strings.
 
 # Match patterns, determine lengths, combine and split strings
 # str_len(x)
 
-##FACTORS are how R stores categorical data. They are used when a variable has a fixed set of possible values, or when you want to use a non-alphabetical ordering of a string.
+##3) FACTORS... how R stores categorical data. They are used when a variable has a fixed set of possible values, or when you want to use a non-alphabetical ordering of a string.
 # functions such as fct_lump(x)
 
 ## https://www.youtube.com/watch?v=uLcd6tRTUEY "Working with categorical data in R without losing your mind" 
 
-##DATES and times will give you the key tools for working with dates and date-times.
+## 4) DATES and times: LUBRIDATE is one of key tools for working with dates and date-times.
+##
 
 
 
